@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Database
+server/data/*.db
+server/data/*.sqlite
+server/data/*.sqlite3
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Build output
+client/dist/
+client/build/
+server/uploads/*
+!server/uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/
+
+# Production secrets & data (never commit)
+deploy/.env
+server/db/*.db
+server/db/*.db-shm
+server/db/*.db-wal
+server/backups/*
+!server/backups/.gitkeep
+server/uploads/*
+!server/uploads/.gitkeep
+server/data/*.sqlite*
+*.zip

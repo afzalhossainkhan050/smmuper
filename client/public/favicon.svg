@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="smmuper-fav-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="50%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#06B6D4" />
+    </linearGradient>
+    <linearGradient id="smmuper-spark-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#FFFFFF" />
+    </linearGradient>
+  </defs>
+
+  <!-- Modern Rounded Squircle Container -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#smmuper-fav-grad)" />
+
+  <!-- Inner Soft Glow Outline -->
+  <rect x="3" y="3" width="58" height="58" rx="15" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" />
+
+  <!-- Dynamic SMM Rocket 'S' Geometric Growth Mark -->
+  <path
+    d="M 44 18 
+       C 40 14, 26 14, 23 20 
+       C 20 26, 27 30, 32 32 
+       C 39 34, 46 38, 43 46 
+       C 40 52, 26 53, 20 48"
+    fill="none"
+    stroke="url(#smmuper-spark-grad)"
+    stroke-width="5.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Top Right Growth Spark Arrow -->
+  <polygon points="41,14 47,14 47,20 44,17" fill="#FFFFFF" />
+
+  <!-- Accent Core Pulse Dot -->
+  <circle cx="32" cy="32" r="3" fill="#06B6D4" />
+</svg>

@@ -1,0 +1,60 @@
+# Deploy behind the Traefik instance already running on the Hostinger VPS.
+# Needs deploy/.env (see .env.example). Run from this folder:
+#   docker compose -f docker-compose.traefik.yml up -d --build
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: smmuper-app:latest
+    container_name: smmuper-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "5000"
+      DB_PATH: /app/server/db/smm_uper.db
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://smmuper.com,https://www.smmuper.com}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@smmuper.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+    volumes:
+      - smmuper-db:/app/server/db
+      - smmuper-backups:/app/server/backups
+      - smmuper-uploads:/app/server/uploads
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.smmuper.loadbalancer.server.port=5000
+      - traefik.http.routers.smmuper.rule=Host(`smmuper.com`)
+      - traefik.http.routers.smmuper.entrypoints=websecure
+      - traefik.http.routers.smmuper.tls.certresolver=letsencrypt
+      - traefik.http.routers.smmuper-www.rule=Host(`www.smmuper.com`)
+      - traefik.http.routers.smmuper-www.entrypoints=websecure
+      - traefik.http.routers.smmuper-www.tls.certresolver=letsencrypt
+      - traefik.http.routers.smmuper-www.middlewares=smmuper-www-redirect
+      - traefik.http.middlewares.smmuper-www-redirect.redirectregex.regex=^https://www\.smmuper\.com/(.*)
+      - traefik.http.middlewares.smmuper-www-redirect.redirectregex.replacement=https://smmuper.com/$${1}
+      - traefik.http.middlewares.smmuper-www-redirect.redirectregex.permanent=true
+
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: smmuper-app:latest
+    container_name: smmuper-worker
+    restart: unless-stopped
+    command: ["node", "server/cron/worker.js"]
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DB_PATH: /app/server/db/smm_uper.db
+    volumes:
+      - smmuper-db:/app/server/db
+      - smmuper-backups:/app/server/backups
+
+volumes:
+  smmuper-db:
+  smmuper-backups:
+  smmuper-uploads:
