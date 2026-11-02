@@ -6,6 +6,8 @@ const { body, validationResult } = require('express-validator');
 const db = require('../db/database');
 const { authenticate } = require('../middleware/auth');
 const { successResponse, errorResponse, sanitizeUser, generateApiKey, generateReferralCode } = require('../utils/helpers');
+const crypto = require('crypto');
+const { getGoogleSettings, verifyGoogleIdToken, normalizeGmail } = require('../utils/googleAuth');
 const { generateBase32Secret, generateTOTP, verifyTOTP, generateOtpauthUri } = require('../utils/totp');
 
 // ──────────────── POST /api/auth/register ────────────────
@@ -85,9 +87,117 @@ router.post('/register', [
   }
 });
 
+// ──────────────── GET /api/auth/google/config (public) ────────────────
+router.get('/google/config', (req, res) => {
+  try {
+    const g = getGoogleSettings();
+    return successResponse(res, { enabled: g.enabled, client_id: g.enabled ? g.client_id : '' }, 'Google login config');
+  } catch (error) {
+    return successResponse(res, { enabled: false, client_id: '' }, 'Google login config');
+  }
+});
+
+// ──────────────── POST /api/auth/google ────────────────
+router.post('/google', [
+  body('credential').isString().isLength({ min: 20, max: 4096 }).withMessage('Google credential is required'),
+  body('ref').optional().isString().trim().isLength({ max: 60 })
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return errorResponse(res, 'Validation failed', 422, errors.array());
+    }
+
+    const g = getGoogleSettings();
+    if (!g.enabled) {
+      return errorResponse(res, 'Google login is not enabled.', 403);
+    }
+
+    let info;
+    try {
+      info = await verifyGoogleIdToken(req.body.credential, g.client_id);
+    } catch (err) {
+      return errorResponse(res, 'Google sign-in could not be verified. Please try again.', 401);
+    }
+
+    const normalized = normalizeGmail(info.email);
+    let user = db.prepare('SELECT * FROM users WHERE google_id = ?').get(info.sub)
+      || db.prepare('SELECT * FROM users WHERE email IN (?, ?)').get(info.email, normalized);
+
+    if (user) {
+      if (user.google_id && user.google_id !== info.sub) {
+        return errorResponse(res, 'This account is linked to a different Google account.', 403);
+      }
+      if (user.status !== 'active') {
+        return errorResponse(res, `Account is ${user.status}. Please contact support.`, 403);
+      }
+      if ((user.role === 'admin' || user.role === 'staff') && !g.allow_staff) {
+        return errorResponse(res, 'Admin and staff accounts must sign in with email and password.', 403);
+      }
+      if (!user.google_id) {
+        db.prepare('UPDATE users SET google_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(info.sub, user.id);
+        user.google_id = info.sub;
+      }
+    } else {
+      const regRow = db.prepare("SELECT value FROM system_settings WHERE key = 'user_registration'").get();
+      const registrationClosed = regRow && ['0', 'false'].includes(String(regRow.value).toLowerCase());
+      if (!g.allow_signup || registrationClosed) {
+        return errorResponse(res, 'No account found for this Google email. New registrations are currently closed.', 403);
+      }
+
+      // Build a unique username from the email's local part
+      let base = normalized.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').slice(0, 24);
+      if (base.length < 3) base = (base + 'user').slice(0, 24);
+      let username = base;
+      while (db.prepare('SELECT id FROM users WHERE username = ?').get(username)) {
+        username = base + crypto.randomInt(100, 99999);
+      }
+
+      let referredBy = null;
+      const refParam = (req.body.ref || '').trim();
+      if (refParam) {
+        const referrer = db.prepare('SELECT id FROM users WHERE referral_code = ? OR username = ?').get(refParam, refParam);
+        if (referrer) referredBy = referrer.id;
+      }
+
+      const randomPassword = bcrypt.hashSync(crypto.randomBytes(32).toString('hex'), 10);
+      const result = db.prepare(`
+        INSERT INTO users (username, email, password, api_key, referral_code, referred_by, balance, avatar, google_id)
+        VALUES (?, ?, ?, ?, ?, ?, 0.00, ?, ?)
+      `).run(username, normalized, randomPassword, generateApiKey(), generateReferralCode(username), referredBy, info.picture, info.sub);
+      user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+    }
+
+    // Respect Two-Factor Authentication
+    if (user.two_factor_enabled === 1) {
+      const tempToken = jwt.sign(
+        { id: user.id, username: user.username, stage: '2fa_challenge' },
+        process.env.JWT_SECRET,
+        { expiresIn: '5m' }
+      );
+      return successResponse(res, {
+        requires_2fa: true,
+        temp_token: tempToken,
+        user: { username: user.username }
+      }, 'Two-Factor Authentication code required.');
+    }
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+    return successResponse(res, { token, user: sanitizeUser(user) }, 'Login successful');
+  } catch (error) {
+    console.error('Google login error:', error);
+    return errorResponse(res, 'Google sign-in failed. Please try again.', 500);
+  }
+});
+
 // ──────────────── POST /api/auth/login ────────────────
 router.post('/login', [
-  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  // Accepts an email address OR a username (the login form allows both)
+  body('email').trim().notEmpty().withMessage('Email address or username is required').isLength({ max: 254 }).withMessage('Email address or username is too long'),
   body('password').notEmpty().withMessage('Password is required'),
   body('code').optional().trim()
 ], (req, res) => {
@@ -97,10 +207,17 @@ router.post('/login', [
       return errorResponse(res, 'Validation failed', 422, errors.array());
     }
 
-    const { email, password, code } = req.body;
+    const { email: identifier, password, code } = req.body;
 
-    // Find user
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    // Find user by email (stored in normalized form) or by username
+    let user;
+    if (String(identifier).includes('@')) {
+      const lowered = String(identifier).toLowerCase();
+      user = db.prepare('SELECT * FROM users WHERE email IN (?, ?)').get(lowered, normalizeGmail(lowered));
+    } else {
+      user = db.prepare('SELECT * FROM users WHERE username = ?').get(identifier)
+        || db.prepare('SELECT * FROM users WHERE username = ? COLLATE NOCASE').get(identifier);
+    }
     if (!user) {
       return errorResponse(res, 'Invalid email or password.', 401);
     }

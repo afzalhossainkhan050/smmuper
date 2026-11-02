@@ -49,6 +49,18 @@ export function AuthProvider({ children }) {
     return u;
   };
 
+  const loginWithGoogle = async (credential) => {
+    const data = await api.auth.googleLogin({ credential });
+    if (data.requires_2fa) {
+      return { requires_2fa: true, temp_token: data.temp_token, user: data.user };
+    }
+    localStorage.setItem('token', data.token);
+    setToken(data.token);
+    setUser(data.user);
+    showToast('Login successful!');
+    return data.user;
+  };
+
   const verify2FA = async (tempToken, code) => {
     const data = await api.auth.verify2FALogin({ temp_token: tempToken, code });
     const t = data.token;
@@ -98,6 +110,7 @@ export function AuthProvider({ children }) {
     token,
     loading,
     login,
+    loginWithGoogle,
     verify2FA,
     register,
     logout,

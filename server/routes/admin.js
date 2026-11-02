@@ -7,6 +7,7 @@ const db = require('../db/database');
 const { authenticate } = require('../middleware/auth');
 const { isAdmin } = require('../middleware/admin');
 const { hasPermission } = require('../middleware/permission');
+const { getGoogleSettings, CLIENT_ID_PATTERN } = require('../utils/googleAuth');
 const { logAdminActivity } = require('../utils/activityLogger');
 const { successResponse, errorResponse, sanitizeUser, generateTransactionId, generateApiKey, paginate, paginationMeta, calculateCharge } = require('../utils/helpers');
 const providerEngine = require('../services/providerEngine');
@@ -2557,6 +2558,70 @@ router.put('/settings', hasPermission('settings.general'), [
 // ═══════════════════════════════════════════════════════════
 //                 EMAIL SETTINGS & TEMPLATES
 // ═══════════════════════════════════════════════════════════
+
+// ──────────────── GET /api/admin/google-login-settings ────────────────
+router.get('/google-login-settings', hasPermission('settings.general'), (req, res) => {
+  try {
+    const g = getGoogleSettings();
+    return successResponse(res, {
+      settings: {
+        enabled: g.login_enabled_flag,
+        client_id: g.client_id,
+        allow_signup: g.allow_signup,
+        allow_staff: g.allow_staff
+      }
+    }, 'Google login settings retrieved');
+  } catch (error) {
+    return errorResponse(res, 'Failed to retrieve Google login settings.', 500);
+  }
+});
+
+// ──────────────── PUT /api/admin/google-login-settings ────────────────
+router.put('/google-login-settings', hasPermission('settings.general'), [
+  body('enabled').isBoolean().withMessage('enabled must be true or false'),
+  body('allow_signup').isBoolean().withMessage('allow_signup must be true or false'),
+  body('allow_staff').isBoolean().withMessage('allow_staff must be true or false'),
+  body('client_id').optional({ nullable: true }).isString().trim().isLength({ max: 200 })
+], (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return errorResponse(res, 'Validation failed', 422, errors.array());
+    }
+
+    const clientId = String(req.body.client_id || '').trim();
+    const enabled = req.body.enabled === true || req.body.enabled === 'true';
+
+    if (clientId && !CLIENT_ID_PATTERN.test(clientId)) {
+      return errorResponse(res, 'Client ID must look like 123456-abc.apps.googleusercontent.com', 422);
+    }
+    if (enabled && !clientId) {
+      return errorResponse(res, 'Enter your Google Client ID before enabling Google login.', 422);
+    }
+
+    const values = {
+      google_login_enabled: enabled ? '1' : '0',
+      google_client_id: clientId,
+      google_allow_signup: (req.body.allow_signup === true || req.body.allow_signup === 'true') ? '1' : '0',
+      google_allow_staff: (req.body.allow_staff === true || req.body.allow_staff === 'true') ? '1' : '0'
+    };
+
+    const upsert = db.prepare(`
+      INSERT INTO system_settings (key, value, group_name, updated_at)
+      VALUES (?, ?, 'google_auth', CURRENT_TIMESTAMP)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, group_name = 'google_auth', updated_at = CURRENT_TIMESTAMP
+    `);
+    db.transaction(() => {
+      for (const [k, v] of Object.entries(values)) upsert.run(k, v);
+    })();
+
+    logAdminActivity(req.user.id, 'google_login_settings_updated', { enabled, allow_signup: values.google_allow_signup === '1', allow_staff: values.google_allow_staff === '1' }, req);
+    return successResponse(res, {}, 'Google login settings saved');
+  } catch (error) {
+    console.error('Google settings save error:', error);
+    return errorResponse(res, 'Failed to save Google login settings.', 500);
+  }
+});
 
 // ──────────────── GET /api/admin/email-settings ────────────────
 router.get('/email-settings', hasPermission('settings.email'), (req, res) => {

@@ -76,6 +76,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api', generalLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.post('/api/auth/google', authLimiter);
 app.use('/api/v2', resellerApiLimiter);
 app.use('/api/user-api', resellerApiLimiter);
 

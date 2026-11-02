@@ -57,6 +57,8 @@ const api = {
   auth: {
     login: (data) => request('/auth/login', { method: 'POST', body: data, auth: false }),
     register: (data) => request('/auth/register', { method: 'POST', body: data, auth: false }),
+    getGoogleConfig: () => request('/auth/google/config', { auth: false }),
+    googleLogin: (data) => request('/auth/google', { method: 'POST', body: data, auth: false }),
     getProfile: () => request('/auth/profile'),
     updateProfile: (data) => request('/auth/profile', { method: 'PUT', body: data }),
     changePassword: (data) => request('/auth/change-password', { method: 'PUT', body: data }),
@@ -178,6 +180,10 @@ const api = {
     // Settings
     getSettings: () => request('/admin/settings'),
     updateSettings: (settings) => request('/admin/settings', { method: 'PUT', body: { settings } }),
+
+    // Google login
+    getGoogleSettings: () => request('/admin/google-login-settings'),
+    updateGoogleSettings: (data) => request('/admin/google-login-settings', { method: 'PUT', body: data }),
 
     // Email
     getEmailSettings: () => request('/admin/email-settings'),

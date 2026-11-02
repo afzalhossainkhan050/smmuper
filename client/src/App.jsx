@@ -46,6 +46,7 @@ import AdminActivityLogsPage from './pages/admin/AdminActivityLogsPage';
 import AdminCurrenciesPage from './pages/admin/AdminCurrenciesPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import AdminEmailSettingsPage from './pages/admin/AdminEmailSettingsPage';
+import AdminGoogleLoginPage from './pages/admin/AdminGoogleLoginPage';
 import AdminNotificationSettingsPage from './pages/admin/AdminNotificationSettingsPage';
 import AdminAddonsPage from './pages/admin/AdminAddonsPage';
 import AdminMailUsersPage from './pages/admin/AdminMailUsersPage';
@@ -203,6 +204,7 @@ export default function App() {
           {/* Settings & Permissions */}
           <Route path="settings" element={<AdminSettingsPage />} />
           <Route path="email-settings" element={<AdminEmailSettingsPage />} />
+          <Route path="google-login" element={<AdminGoogleLoginPage />} />
           <Route path="notification-settings" element={<AdminNotificationSettingsPage />} />
           <Route path="roles" element={<AdminRolesPage />} />
           <Route path="addons" element={<AdminAddonsPage />} />

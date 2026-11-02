@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from '../components/brand/Logo';
+import GoogleSignInButton from '../components/ui/GoogleSignInButton';
 import {
-  Mail, Lock, LogIn, Eye, EyeOff, ShieldCheck, UserCheck,
-  AlertCircle, KeyRound, ArrowLeft, ArrowRight, Sparkles, Check, Shield
+  Mail, Lock, LogIn, Eye, EyeOff, ShieldCheck,
+  AlertCircle, KeyRound, ArrowLeft, ArrowRight, Sparkles, Shield
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -13,21 +14,19 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
-  const [demoLoaded, setDemoLoaded] = useState('');
   const [loading, setLoading] = useState(false);
 
   // 2FA Challenge State
   const [twoFactorChallenge, setTwoFactorChallenge] = useState(null); // { temp_token, username }
   const [twoFactorCode, setTwoFactorCode] = useState('');
 
-  const { login, verify2FA } = useAuth();
+  const { login, loginWithGoogle, verify2FA } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setDemoLoaded('');
 
     if (!email.trim() || !password) {
       setError('Please provide your email address and password.');
@@ -78,12 +77,26 @@ export default function LoginPage() {
     }
   };
 
-  const handleFillDemo = (demoEmail, demoPass, label) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
+  const handleGoogleCredential = async (credential) => {
     setError('');
-    setDemoLoaded(label);
-    setTimeout(() => setDemoLoaded(''), 3000);
+    setLoading(true);
+    try {
+      const res = await loginWithGoogle(credential);
+      if (res && res.requires_2fa) {
+        setTwoFactorChallenge({
+          temp_token: res.temp_token,
+          username: res.user?.username || 'your account'
+        });
+        return;
+      }
+      const defaultPath = res?.role === 'admin' ? '/admin' : '/dashboard';
+      const redirectPath = location.state?.from?.pathname || defaultPath;
+      navigate(redirectPath, { replace: true });
+    } catch (err) {
+      setError(err.message || 'Google sign-in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -109,14 +122,6 @@ export default function LoginPage() {
               : 'Sign in to access your wholesale SMM orders, wallet, and reseller API'}
           </p>
         </div>
-
-        {/* Success Banner when Demo is filled */}
-        {demoLoaded && (
-          <div className="mb-4 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-2 animate-in fade-in duration-150">
-            <Check size={15} className="flex-shrink-0" />
-            <span>{demoLoaded} credentials loaded! Click Sign In.</span>
-          </div>
-        )}
 
         {/* Error Alert */}
         {error && (
@@ -261,31 +266,9 @@ export default function LoginPage() {
           </form>
         )}
 
-        {/* Quick Demo Test Logins Bar */}
+        {/* Google Sign-In (shown only when enabled by admin) */}
         {!twoFactorChallenge && (
-          <div className="mt-6 pt-5 border-t border-border-main">
-            <div className="text-[10px] font-extrabold text-muted-foreground uppercase text-center mb-2.5 tracking-wider">
-              ⚡ Quick Demo Credentials
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleFillDemo('admin@smmuper.com', 'Password123!', 'Admin')}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-bg-surface-elevated hover:bg-bg-surface-hover border border-border-main text-xs font-bold text-text-primary transition-all hover:border-primary hover:text-primary"
-              >
-                <ShieldCheck size={14} className="text-indigo-400" />
-                <span>Admin Demo</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFillDemo('demo@smmuper.com', 'Password123!', 'Client')}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-bg-surface-elevated hover:bg-bg-surface-hover border border-border-main text-xs font-bold text-text-primary transition-all hover:border-cyan-400 hover:text-cyan-400"
-              >
-                <UserCheck size={14} className="text-cyan-400" />
-                <span>Client Demo</span>
-              </button>
-            </div>
-          </div>
+          <GoogleSignInButton onCredential={handleGoogleCredential} disabled={loading} />
         )}
 
         {/* Register Link */}

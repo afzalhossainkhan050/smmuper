@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from '../components/brand/Logo';
+import GoogleSignInButton from '../components/ui/GoogleSignInButton';
 import {
   User, Mail, Lock, UserPlus, Eye, EyeOff, AlertCircle,
   ShieldCheck, ArrowRight, Shield, Sparkles, Check
@@ -19,8 +20,25 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleCredential = async (credential) => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await loginWithGoogle(credential);
+      if (res && res.requires_2fa) {
+        setError('This account uses two-factor authentication. Please sign in from the Login page.');
+        return;
+      }
+      navigate(res?.role === 'admin' ? '/admin' : '/dashboard', { replace: true });
+    } catch (err) {
+      setError(err.message || 'Google sign-up failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -193,6 +211,8 @@ export default function RegisterPage() {
             )}
           </button>
         </form>
+
+        <GoogleSignInButton text="signup_with" onCredential={handleGoogleCredential} disabled={loading} />
 
         {/* Login Link */}
         <div className="mt-6 text-center text-xs text-muted-foreground">
