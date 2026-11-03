@@ -592,6 +592,20 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_admin_logs ON admin_activity_logs(admin_id);
 `);
 
+// ---------- Password reset tokens (only a hash of the token is stored) ----------
+db.exec(`
+  CREATE TABLE IF NOT EXISTS password_resets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    used_at DATETIME DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+`);
+
 // ---------- Google Sign-In support ----------
 safeAddColumn('users', 'google_id TEXT DEFAULT NULL');
 db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id) WHERE google_id IS NOT NULL');

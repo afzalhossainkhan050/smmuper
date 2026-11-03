@@ -143,7 +143,7 @@ export default function HomePage() {
     e.preventDefault();
     if (!newsletterEmail.trim()) return;
     try {
-      await api.cms.subscribeNewsletter(newsletterEmail.trim());
+      await api.cms.subscribe(newsletterEmail.trim());
       setNewsletterSubscribed(true);
       setNewsletterEmail('');
     } catch (err) {

@@ -8,6 +8,7 @@ const { authenticate } = require('../middleware/auth');
 const { isAdmin } = require('../middleware/admin');
 const { hasPermission } = require('../middleware/permission');
 const { getGoogleSettings, CLIENT_ID_PATTERN } = require('../utils/googleAuth');
+const { sendMail } = require('../utils/mailer');
 const { logAdminActivity } = require('../utils/activityLogger');
 const { successResponse, errorResponse, sanitizeUser, generateTransactionId, generateApiKey, paginate, paginationMeta, calculateCharge } = require('../utils/helpers');
 const providerEngine = require('../services/providerEngine');
@@ -2658,7 +2659,8 @@ router.put('/email-settings', hasPermission('settings.email'), (req, res) => {
 
     const saveTx = db.transaction(() => {
       for (const [key, value] of Object.entries(emailData)) {
-        upsertStmt.run(key, String(value));
+        if (!/^mail_[a-z_]+$/.test(key)) continue; // only email settings may be written here
+        upsertStmt.run(key, String(value == null ? '' : value));
       }
     });
 
@@ -2674,13 +2676,26 @@ router.put('/email-settings', hasPermission('settings.email'), (req, res) => {
 // ──────────────── POST /api/admin/email-settings/test ────────────────
 router.post('/email-settings/test', hasPermission('settings.email'), [
   body('email').isEmail().withMessage('Valid recipient email required')
-], (req, res) => {
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return errorResponse(res, 'Enter a valid recipient email address.', 422, errors.array());
+  }
+  const { email } = req.body;
   try {
-    const { email } = req.body;
+    await sendMail({
+      to: email,
+      subject: 'SMMuper test email',
+      text: 'This is a test email from your SMMuper admin panel. If you can read this, your email settings work.',
+      html: '<p>This is a test email from your <strong>SMMuper</strong> admin panel.</p><p>If you can read this, your email settings work.</p>'
+    });
     logAdminActivity(req.user.id, 'test_email_sent', { recipient: email }, req);
-    return successResponse(res, {}, `Test email dispatched successfully to ${email}. SMTP configuration verified.`);
+    return successResponse(res, {}, `Test email sent to ${email}. Check the inbox (and the spam folder).`);
   } catch (error) {
-    return errorResponse(res, 'Test email dispatch failed.', 500);
+    if (error.code === 'MAIL_NOT_CONFIGURED') {
+      return errorResponse(res, error.message, 400);
+    }
+    return errorResponse(res, `Could not send the test email: ${error.message}`, 502);
   }
 });
 

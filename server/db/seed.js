@@ -649,4 +649,7 @@ const stats = {
 };
 console.log('Database summary:', stats);
 
+// Default website pages (Terms, Privacy, Refund Policy) - must run before the DB is closed
+require('./seed_pages');
+
 db.close();

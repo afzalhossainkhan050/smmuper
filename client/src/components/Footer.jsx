@@ -69,8 +69,9 @@ export default function Footer() {
           &copy; {new Date().getFullYear()} <span className="font-bold text-text-primary">SMMuper</span> (smmuper.com). All rights reserved.
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/services" className="hover:text-primary">Terms of Service</Link>
-          <Link to="/services" className="hover:text-primary">Privacy Policy</Link>
+          <Link to="/page/terms-and-conditions" className="hover:text-primary">Terms of Service</Link>
+          <Link to="/page/privacy-policy" className="hover:text-primary">Privacy Policy</Link>
+          <Link to="/page/refund-policy" className="hover:text-primary">Refund Policy</Link>
           <span className="opacity-50">v1.0.0</span>
         </div>
       </div>

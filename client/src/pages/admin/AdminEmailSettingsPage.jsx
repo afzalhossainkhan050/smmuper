@@ -47,11 +47,12 @@ export default function AdminEmailSettingsPage() {
         api.admin.getEmailSettings(),
         api.admin.getEmailTemplates()
       ]);
-      if (emailRes.data?.email_settings) {
-        setSmtpConfig(prev => ({ ...prev, ...emailRes.data.email_settings }));
+      const savedConfig = emailRes.emailConfig || emailRes.email_settings;
+      if (savedConfig) {
+        setSmtpConfig(prev => ({ ...prev, ...savedConfig }));
       }
-      if (tplRes.data?.templates) {
-        setTemplates(tplRes.data.templates);
+      if (tplRes.templates) {
+        setTemplates(tplRes.templates);
       }
     } catch (err) {
       showToast(err.message || 'Failed to load email settings', 'error');
@@ -85,8 +86,8 @@ export default function AdminEmailSettingsPage() {
     }
     try {
       setTesting(true);
-      await api.admin.sendTestEmail(testEmail);
-      showToast(`Test email dispatched successfully to ${testEmail}`, 'success');
+      const res = await api.admin.sendTestEmail(testEmail);
+      showToast(res?.message || `Test email sent to ${testEmail}`, 'success');
       setIsTestModalOpen(false);
       setTestEmail('');
     } catch (err) {

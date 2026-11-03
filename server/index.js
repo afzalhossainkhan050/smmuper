@@ -77,6 +77,8 @@ app.use('/api', generalLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.post('/api/auth/google', authLimiter);
+app.post('/api/auth/forgot-password', authLimiter);
+app.post('/api/auth/reset-password', authLimiter);
 app.use('/api/v2', resellerApiLimiter);
 app.use('/api/user-api', resellerApiLimiter);
 

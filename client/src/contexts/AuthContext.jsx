@@ -35,8 +35,20 @@ export function AuthProvider({ children }) {
     fetchProfile();
   }, [fetchProfile]);
 
-  const login = async (email, password) => {
-    const data = await api.auth.login({ email, password });
+  // Signed out automatically when the server rejects the saved login (expired or suspended account)
+  useEffect(() => {
+    const onExpired = () => {
+      localStorage.removeItem('token');
+      setToken(null);
+      setUser(null);
+      showToast('Your session has ended. Please sign in again.', 'error');
+    };
+    window.addEventListener('auth:expired', onExpired);
+    return () => window.removeEventListener('auth:expired', onExpired);
+  }, [showToast]);
+
+  const login = async (email, password, remember = true) => {
+    const data = await api.auth.login({ email, password, remember });
     if (data.requires_2fa) {
       return { requires_2fa: true, temp_token: data.temp_token, user: data.user };
     }

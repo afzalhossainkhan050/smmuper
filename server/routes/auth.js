@@ -7,6 +7,7 @@ const db = require('../db/database');
 const { authenticate } = require('../middleware/auth');
 const { successResponse, errorResponse, sanitizeUser, generateApiKey, generateReferralCode } = require('../utils/helpers');
 const crypto = require('crypto');
+const { sendMail, isMailConfigured, buildPasswordResetEmail } = require('../utils/mailer');
 const { getGoogleSettings, verifyGoogleIdToken, normalizeGmail } = require('../utils/googleAuth');
 const { generateBase32Secret, generateTOTP, verifyTOTP, generateOtpauthUri } = require('../utils/totp');
 
@@ -84,6 +85,99 @@ router.post('/register', [
   } catch (error) {
     console.error('Register error:', error);
     return errorResponse(res, 'Registration failed. Please try again.', 500);
+  }
+});
+
+/** Session length: "Remember me" = 30 days for customers (7 for admin/staff), otherwise 1 day. */
+function sessionExpiry(role, remember) {
+  const privileged = role === 'admin' || role === 'staff';
+  if (remember) return privileged ? '7d' : '30d';
+  return '1d';
+}
+
+function publicBaseUrl(req) {
+  if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/+$/, '');
+  const first = (process.env.CORS_ORIGIN || '').split(',').map((o) => o.trim()).filter(Boolean)[0];
+  if (first) return first.replace(/\/+$/, '');
+  return `${req.protocol}://${req.get('host')}`;
+}
+
+// ──────────────── POST /api/auth/forgot-password ────────────────
+router.post('/forgot-password', [
+  body('email').isString().trim().isLength({ min: 3, max: 254 }).withMessage('Enter your email address')
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return errorResponse(res, 'Validation failed', 422, errors.array());
+  }
+
+  // Same answer whether or not the account exists, so this cannot be used to find customers.
+  const GENERIC = 'If an account exists for that email, a reset link is on its way. Check your inbox and spam folder.';
+
+  let user = null;
+  try {
+    const identifier = String(req.body.email).trim();
+    if (identifier.includes('@')) {
+      const lowered = identifier.toLowerCase();
+      user = db.prepare('SELECT * FROM users WHERE email IN (?, ?)').get(lowered, normalizeGmail(lowered));
+    } else {
+      user = db.prepare('SELECT * FROM users WHERE username = ?').get(identifier);
+    }
+  } catch (error) {
+    console.error('Forgot password lookup error:', error);
+  }
+
+  successResponse(res, {}, GENERIC);
+
+  try {
+    if (!user || user.status !== 'active' || !user.email) return;
+    const recent = db.prepare("SELECT COUNT(*) AS c FROM password_resets WHERE user_id = ? AND created_at > datetime('now', '-1 hour')").get(user.id).c;
+    if (recent >= 3) return;
+    if (!isMailConfigured()) {
+      console.warn('Password reset requested but email (SMTP) is not configured in Admin > Email Settings.');
+      return;
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    db.prepare("INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, datetime('now', '+1 hour'))").run(user.id, tokenHash);
+
+    const resetUrl = `${publicBaseUrl(req)}/reset-password?token=${token}`;
+    const mail = buildPasswordResetEmail({ username: user.username, resetUrl });
+    sendMail({ to: user.email, ...mail }).catch((err) => console.error('Password reset email failed:', err.message));
+  } catch (error) {
+    console.error('Forgot password error:', error);
+  }
+});
+
+// ──────────────── POST /api/auth/reset-password ────────────────
+router.post('/reset-password', [
+  body('token').isString().isLength({ min: 64, max: 64 }).matches(/^[a-f0-9]+$/).withMessage('Invalid reset link'),
+  body('password').isString().isLength({ min: 8, max: 128 }).withMessage('Password must be at least 8 characters')
+], (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return errorResponse(res, errors.array()[0].msg || 'Validation failed', 422, errors.array());
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(req.body.token).digest('hex');
+    const row = db.prepare("SELECT * FROM password_resets WHERE token_hash = ? AND used_at IS NULL AND expires_at > datetime('now')").get(tokenHash);
+    const user = row ? db.prepare('SELECT id, status FROM users WHERE id = ?').get(row.user_id) : null;
+    if (!row || !user || user.status !== 'active') {
+      return errorResponse(res, 'This reset link is invalid or has expired. Please request a new one.', 400);
+    }
+
+    const hashed = bcrypt.hashSync(req.body.password, 10);
+    db.transaction(() => {
+      db.prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(hashed, user.id);
+      db.prepare('UPDATE password_resets SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL').run(user.id);
+    })();
+
+    return successResponse(res, {}, 'Password updated. You can now sign in with your new password.');
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return errorResponse(res, 'Could not reset your password. Please try again.', 500);
   }
 });
 
@@ -208,6 +302,7 @@ router.post('/login', [
     }
 
     const { email: identifier, password, code } = req.body;
+    const remember = req.body.remember === true || req.body.remember === 'true';
 
     // Find user by email (stored in normalized form) or by username
     let user;
@@ -244,7 +339,7 @@ router.post('/login', [
       } else {
         // Return 2FA challenge with a temporary short-lived challenge token
         const tempToken = jwt.sign(
-          { id: user.id, username: user.username, stage: '2fa_challenge' },
+          { id: user.id, username: user.username, stage: '2fa_challenge', remember },
           process.env.JWT_SECRET,
           { expiresIn: '5m' }
         );
@@ -260,7 +355,7 @@ router.post('/login', [
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { expiresIn: sessionExpiry(user.role, remember) }
     );
 
     return successResponse(res, {
@@ -308,7 +403,7 @@ router.post('/2fa/verify-login', [
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { expiresIn: sessionExpiry(user.role, decoded.remember === true) }
     );
 
     return successResponse(res, {

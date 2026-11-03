@@ -47,6 +47,8 @@ import AdminCurrenciesPage from './pages/admin/AdminCurrenciesPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import AdminEmailSettingsPage from './pages/admin/AdminEmailSettingsPage';
 import AdminGoogleLoginPage from './pages/admin/AdminGoogleLoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import AdminNotificationSettingsPage from './pages/admin/AdminNotificationSettingsPage';
 import AdminAddonsPage from './pages/admin/AdminAddonsPage';
 import AdminMailUsersPage from './pages/admin/AdminMailUsersPage';
@@ -114,6 +116,8 @@ export default function App() {
           <Route path="/services" element={<ServicesListPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/page/:slug" element={<CustomPageView />} />
           <Route path="/blogs" element={<BlogsPublicPage />} />
           <Route path="/blog/:slug" element={<SingleBlogView />} />

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export default function NewOrderPage() {
-  const { user, showToast } = useAuth();
+  const { user, showToast, fetchProfile } = useAuth();
   const [searchParams] = useSearchParams();
   const preselectedServiceId = searchParams.get('service_id');
   const [activeTab, setActiveTab] = useState('single'); // 'single' | 'mass'
@@ -125,6 +125,7 @@ export default function NewOrderPage() {
       });
       showToast(`Order #${res.order?.id || ''} placed successfully!`);
       setForm(prev => ({ ...prev, link: '', comments: '' }));
+      fetchProfile();
     } catch (err) {
       showToast(err.message || 'Failed to place order', 'error');
     } finally {
@@ -146,6 +147,7 @@ export default function NewOrderPage() {
       setMassResult(res);
       showToast(res.message || `Mass orders placed successfully!`);
       setMassOrdersText('');
+      fetchProfile();
     } catch (err) {
       showToast(err.message || 'Failed to place mass orders', 'error');
     } finally {

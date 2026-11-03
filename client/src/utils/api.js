@@ -36,9 +36,20 @@ async function request(endpoint, options = {}) {
     const response = await fetch(`${API_BASE}${endpoint}`, config);
     const data = await response.json().catch(() => null);
 
+    // A rejected login token on a signed-in request means the session ended: tell the app to sign out.
+    if (response.status === 401 && auth && localStorage.getItem('token')) {
+      window.dispatchEvent(new Event('auth:expired'));
+    }
+
     if (!response.ok) {
       const message = data?.message || data?.error || `Request failed with status ${response.status}`;
       throw new ApiError(message, response.status, data);
+    }
+
+    // The server returns flat JSON ({ success, message, addons: [...] }). Several pages read
+    // res.data.addons, so expose a hidden `data` alias that points at the same object.
+    if (data && typeof data === 'object' && !Array.isArray(data) && !('data' in data)) {
+      Object.defineProperty(data, 'data', { value: data, enumerable: false });
     }
 
     return data;
@@ -57,6 +68,8 @@ const api = {
   auth: {
     login: (data) => request('/auth/login', { method: 'POST', body: data, auth: false }),
     register: (data) => request('/auth/register', { method: 'POST', body: data, auth: false }),
+    forgotPassword: (data) => request('/auth/forgot-password', { method: 'POST', body: data, auth: false }),
+    resetPassword: (data) => request('/auth/reset-password', { method: 'POST', body: data, auth: false }),
     getGoogleConfig: () => request('/auth/google/config', { auth: false }),
     googleLogin: (data) => request('/auth/google', { method: 'POST', body: data, auth: false }),
     getProfile: () => request('/auth/profile'),

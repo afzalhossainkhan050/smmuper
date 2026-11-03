@@ -35,7 +35,7 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const res = await login(email.trim(), password);
+      const res = await login(email.trim(), password, rememberMe);
       if (res && res.requires_2fa) {
         setTwoFactorChallenge({
           temp_token: res.temp_token,
@@ -212,7 +212,7 @@ export default function LoginPage() {
                   <Lock size={14} className="text-muted-foreground" />
                   <span>Password</span>
                 </label>
-                <Link to="/services" className="text-[11px] font-semibold text-primary hover:underline">
+                <Link to="/forgot-password" className="text-[11px] font-semibold text-primary hover:underline">
                   Forgot Password?
                 </Link>
               </div>
