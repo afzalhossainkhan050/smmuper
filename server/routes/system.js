@@ -34,6 +34,11 @@ router.get('/config', (req, res) => {
       defaultCurrency: currencies.find(c => c.is_default === 1) || currencies[0] || { code: 'USD', symbol: '$', exchange_rate: 1.0 },
       platforms,
       notice,
+      theme: {
+        primary: /^#[0-9a-fA-F]{6}$/.test(settings.theme_primary || '') ? settings.theme_primary : '',
+        accent: /^#[0-9a-fA-F]{6}$/.test(settings.theme_accent || '') ? settings.theme_accent : '',
+        default_mode: ['dark', 'light'].includes(settings.theme_default_mode) ? settings.theme_default_mode : ''
+      },
       version: '1.0.0',
     }, 'System configuration loaded');
   } catch (error) {

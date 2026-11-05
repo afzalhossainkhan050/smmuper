@@ -485,7 +485,7 @@ export default function HomePage() {
               <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded">Crypto</span>
             </div>
             <div className="px-5 py-3 rounded-2xl bg-surface border border-border-main shadow-sm flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#6366F1]"></span>
+              <span className="w-3 h-3 rounded-full bg-primary"></span>
               <span className="font-extrabold text-sm text-text-primary">Stripe / Cards</span>
             </div>
             <div className="px-5 py-3 rounded-2xl bg-surface border border-border-main shadow-sm flex items-center gap-2">

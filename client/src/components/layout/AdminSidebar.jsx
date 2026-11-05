@@ -7,7 +7,7 @@ import {
   ShoppingCart, Receipt, ShieldCheck, FileCheck, Users, Mail,
   Gift, Sliders, Shield, Puzzle, CreditCard, Palette, Layout,
   FileText, Menu as MenuIcon, BookOpen, Bell, ChevronDown, ChevronRight,
-  LogOut, ExternalLink, X, LogIn
+  LogOut, ExternalLink, X, LogIn, Palette
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -122,6 +122,7 @@ export default function AdminSidebar({ isCollapsed, isMobileOpen, onCloseMobile 
         { label: 'Control Panel', to: '/admin/settings', icon: Sliders },
         { label: 'Email Settings', to: '/admin/email-settings', icon: Mail },
         { label: 'Google Login', to: '/admin/google-login', icon: LogIn },
+        { label: 'Theme & Colors', to: '/admin/theme', icon: Palette },
         { label: 'Notification Settings', to: '/admin/notification-settings', icon: Bell },
         { label: 'Roles & Permission', to: '/admin/roles', icon: Shield },
         { label: 'Activity Logs', to: '/admin/activity-logs', icon: FileCheck },

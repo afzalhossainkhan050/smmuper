@@ -41,6 +41,7 @@ export default function MenuSearchModal({ isOpen, onClose }) {
     { label: 'Control Panel / General Settings', path: '/admin/settings', group: 'Settings Panel', icon: Settings },
     { label: 'Email Settings & Templates', path: '/admin/email-settings', group: 'Settings Panel', icon: Settings },
     { label: 'Google Login', path: '/admin/google-login', group: 'Settings Panel', icon: Settings },
+    { label: 'Theme & Colors', path: '/admin/theme', group: 'Settings Panel', icon: Settings },
     { label: 'Notification Settings & Push', path: '/admin/notification-settings', group: 'Settings Panel', icon: Settings },
     { label: 'Roles & Permissions', path: '/admin/roles', group: 'Settings Panel', icon: ShieldCheck },
     { label: 'Admin Activity Logs', path: '/admin/activity-logs', group: 'Settings Panel', icon: Settings },

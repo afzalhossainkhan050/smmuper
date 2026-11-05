@@ -194,6 +194,10 @@ const api = {
     getSettings: () => request('/admin/settings'),
     updateSettings: (settings) => request('/admin/settings', { method: 'PUT', body: { settings } }),
 
+    // Theme & colors
+    getThemeSettings: () => request('/admin/theme-settings'),
+    updateThemeSettings: (data) => request('/admin/theme-settings', { method: 'PUT', body: data }),
+
     // Google login
     getGoogleSettings: () => request('/admin/google-login-settings'),
     updateGoogleSettings: (data) => request('/admin/google-login-settings', { method: 'PUT', body: data }),

@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../utils/api';
+import { useTheme } from './ThemeContext';
 
 const SystemContext = createContext(null);
 
 export function SystemProvider({ children }) {
+  const { setBrand, applyDefaultMode } = useTheme();
   const [config, setConfig] = useState({
     brand: {
       name: 'SMMuper',
@@ -36,6 +38,10 @@ export function SystemProvider({ children }) {
       const res = await api.system.getConfig();
       if (res && res.brand) {
         setConfig(res);
+        if (res.theme) {
+          setBrand({ primary: res.theme.primary, accent: res.theme.accent });
+          applyDefaultMode(res.theme.default_mode);
+        }
         // If no user override, select default currency
         const saved = localStorage.getItem('smmuper_currency');
         if (!saved && res.defaultCurrency) {
@@ -47,7 +53,7 @@ export function SystemProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setBrand, applyDefaultMode]);
 
   useEffect(() => {
     fetchConfig();

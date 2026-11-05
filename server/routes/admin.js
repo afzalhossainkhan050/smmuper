@@ -2560,6 +2560,56 @@ router.put('/settings', hasPermission('settings.general'), [
 //                 EMAIL SETTINGS & TEMPLATES
 // ═══════════════════════════════════════════════════════════
 
+// ──────────────── GET /api/admin/theme-settings ────────────────
+router.get('/theme-settings', hasPermission('settings.general'), (req, res) => {
+  try {
+    const rows = db.prepare("SELECT key, value FROM system_settings WHERE group_name = 'theme'").all();
+    const s = {};
+    for (const r of rows) s[r.key] = r.value;
+    return successResponse(res, {
+      settings: {
+        primary: s.theme_primary || '',
+        accent: s.theme_accent || '',
+        default_mode: s.theme_default_mode || ''
+      }
+    }, 'Theme settings retrieved');
+  } catch (error) {
+    return errorResponse(res, 'Failed to retrieve theme settings.', 500);
+  }
+});
+
+// ──────────────── PUT /api/admin/theme-settings ────────────────
+router.put('/theme-settings', hasPermission('settings.general'), [
+  body('primary').optional({ nullable: true }).custom((v) => v === '' || /^#[0-9a-fA-F]{6}$/.test(v)).withMessage('Primary color must look like #7C5CFC'),
+  body('accent').optional({ nullable: true }).custom((v) => v === '' || /^#[0-9a-fA-F]{6}$/.test(v)).withMessage('Accent color must look like #2DD4BF'),
+  body('default_mode').optional({ nullable: true }).isIn(['', 'dark', 'light']).withMessage('Default mode must be dark, light or empty')
+], (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return errorResponse(res, errors.array()[0].msg || 'Validation failed', 422, errors.array());
+    }
+    const values = {
+      theme_primary: (req.body.primary || '').toUpperCase(),
+      theme_accent: (req.body.accent || '').toUpperCase(),
+      theme_default_mode: req.body.default_mode || ''
+    };
+    const upsert = db.prepare(`
+      INSERT INTO system_settings (key, value, group_name, updated_at)
+      VALUES (?, ?, 'theme', CURRENT_TIMESTAMP)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, group_name = 'theme', updated_at = CURRENT_TIMESTAMP
+    `);
+    db.transaction(() => {
+      for (const [k, v] of Object.entries(values)) upsert.run(k, v);
+    })();
+    logAdminActivity(req.user.id, 'theme_settings_updated', values, req);
+    return successResponse(res, {}, 'Theme settings saved');
+  } catch (error) {
+    console.error('Theme settings save error:', error);
+    return errorResponse(res, 'Failed to save theme settings.', 500);
+  }
+});
+
 // ──────────────── GET /api/admin/google-login-settings ────────────────
 router.get('/google-login-settings', hasPermission('settings.general'), (req, res) => {
   try {

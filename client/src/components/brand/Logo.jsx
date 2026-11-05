@@ -34,16 +34,16 @@ export default function Logo({
       >
         <defs>
           <linearGradient id="logo-bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#6366F1" />
-            <stop offset="50%" stopColor="#4F46E5" />
-            <stop offset="100%" stopColor="#06B6D4" />
+            <stop offset="0%" style={{ stopColor: 'var(--brand-1, #7C5CFC)' }} />
+            <stop offset="50%" style={{ stopColor: 'var(--brand-2, #5498DD)' }} />
+            <stop offset="100%" style={{ stopColor: 'var(--brand-3, #2DD4BF)' }} />
           </linearGradient>
           <linearGradient id="logo-s-grad" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#38BDF8" />
+            <stop offset="0%" style={{ stopColor: 'color-mix(in srgb, var(--brand-3, #2DD4BF) 55%, white)' }} />
             <stop offset="100%" stopColor="#FFFFFF" />
           </linearGradient>
           <filter id="logo-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#6366F1" floodOpacity="0.35" />
+            <feDropShadow dx="0" dy="4" stdDeviation="6" style={{ floodColor: 'var(--brand-1, #7C5CFC)' }} floodOpacity="0.35" />
           </filter>
         </defs>
 
@@ -68,7 +68,7 @@ export default function Logo({
         <polygon points="41,14 47,14 47,20 44,17" fill="#FFFFFF" />
 
         {/* Core Nexus Dot */}
-        <circle cx="32" cy="32" r="3.2" fill="#06B6D4" />
+        <circle cx="32" cy="32" r="3.2" style={{ fill: 'var(--brand-3, #2DD4BF)' }} />
       </svg>
 
       {/* Typography for Full Variant */}

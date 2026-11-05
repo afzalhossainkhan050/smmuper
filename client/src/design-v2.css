@@ -1,0 +1,459 @@
+/* ==========================================================================
+   SMMuper design v2 ("Aurora")
+   Loaded after App.css. Mostly colors, depth, corners and type; it avoids layout
+   so existing pages keep their structure. Brand colors come from --brand-1/2/3,
+   which the admin panel can change (Admin > Theme & Colors).
+   ========================================================================== */
+
+/* ---------- 1. Design tokens ---------- */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --brand-1: #7C5CFC;
+  --brand-2: #5498DD;
+  --brand-3: #2DD4BF;
+
+  --bg-app: #070A12;
+  --bg-surface: #0D1220;
+  --bg-surface-elevated: #121A2B;
+  --bg-surface-hover: #19233A;
+  --bg-surface-subtle: #0A0F1C;
+
+  --sidebar-bg: #080C17;
+  --sidebar-border: #141C2E;
+  --sidebar-item-hover: rgba(124, 92, 252, 0.12);
+  --sidebar-item-active: #C4B5FF;
+  --sidebar-item-active-bg: rgba(124, 92, 252, 0.2);
+  --sidebar-heading: #5E6A86;
+  --sidebar-text: #9AA6BF;
+  --sidebar-text-hover: #F4F6FC;
+
+  --topbar-bg: rgba(8, 12, 22, 0.72);
+  --topbar-border: #141C2E;
+
+  --border-main: #1B2438;
+  --border-subtle: #141C2D;
+  --border-focus: #7C5CFC;
+
+  --text-primary: #F3F6FC;
+  --text-secondary: #A6B0C6;
+  --text-muted: #7A86A1;
+  --text-inverted: #070A12;
+
+  --card-bg: #0D1220;
+  --card-bg-glass: rgba(13, 18, 32, 0.72);
+  --card-border: #1B2438;
+  --card-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 22px 44px -22px rgba(0, 0, 0, 0.7);
+
+  --primary: #7C5CFC;
+  --primary-hover: #6A49EE;
+  --primary-light: rgba(124, 92, 252, 0.16);
+  --primary-gradient: linear-gradient(135deg, var(--brand-1) 0%, var(--brand-2) 55%, var(--brand-3) 100%);
+  --secondary-gradient: linear-gradient(135deg, var(--brand-2) 0%, var(--brand-3) 100%);
+  --accent-cyan: #2DD4BF;
+  --accent-cyan-bg: rgba(45, 212, 191, 0.14);
+
+  --success: #22C55E;
+  --success-bg: rgba(34, 197, 94, 0.14);
+  --warning: #F5A524;
+  --warning-bg: rgba(245, 165, 36, 0.14);
+  --danger: #F5586B;
+  --danger-bg: rgba(245, 88, 107, 0.14);
+  --info: #4C8DFF;
+  --info-bg: rgba(76, 141, 255, 0.14);
+
+  --input-bg: #0A0F1C;
+  --input-border: #212C45;
+  --input-text: #F3F6FC;
+  --input-placeholder: #66728D;
+  --overlay-bg: rgba(4, 6, 12, 0.74);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --ring: 0 0 0 4px var(--primary-light);
+  --glow: 0 10px 28px -10px color-mix(in srgb, var(--brand-1) 70%, transparent);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --brand-1: #6D4AF0;
+  --brand-2: #3F82E6;
+  --brand-3: #0FB5A4;
+
+  --bg-app: #F4F6FB;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #F8FAFD;
+  --bg-surface-hover: #EEF2FA;
+  --bg-surface-subtle: #F9FAFD;
+
+  --sidebar-bg: #0B1020;
+  --sidebar-border: #1A2238;
+  --sidebar-item-hover: rgba(109, 74, 240, 0.16);
+  --sidebar-item-active: #C4B5FF;
+  --sidebar-item-active-bg: rgba(109, 74, 240, 0.26);
+  --sidebar-heading: #6B7690;
+  --sidebar-text: #9AA6BF;
+  --sidebar-text-hover: #FFFFFF;
+
+  --topbar-bg: rgba(255, 255, 255, 0.8);
+  --topbar-border: #E3E8F2;
+
+  --border-main: #E3E8F2;
+  --border-subtle: #EDF1F8;
+  --border-focus: #6D4AF0;
+
+  --text-primary: #0E1424;
+  --text-secondary: #475268;
+  --text-muted: #6B7690;
+  --text-inverted: #F4F6FB;
+
+  --card-bg: #FFFFFF;
+  --card-bg-glass: rgba(255, 255, 255, 0.86);
+  --card-border: #E3E8F2;
+  --card-shadow: 0 1px 2px rgba(14, 20, 36, 0.04), 0 14px 32px -18px rgba(14, 20, 36, 0.18);
+
+  --primary: #6D4AF0;
+  --primary-hover: #5A38DB;
+  --primary-light: rgba(109, 74, 240, 0.12);
+  --accent-cyan: #0FB5A4;
+  --accent-cyan-bg: rgba(15, 181, 164, 0.12);
+
+  --success: #16A34A;
+  --success-bg: rgba(22, 163, 74, 0.12);
+  --warning: #D97706;
+  --warning-bg: rgba(217, 119, 6, 0.12);
+  --danger: #E11D48;
+  --danger-bg: rgba(225, 29, 72, 0.1);
+  --info: #2563EB;
+  --info-bg: rgba(37, 99, 235, 0.1);
+
+  --input-bg: #FFFFFF;
+  --input-border: #D5DCEA;
+  --input-text: #0E1424;
+  --input-placeholder: #98A2B8;
+  --overlay-bg: rgba(14, 20, 36, 0.5);
+  --glow: 0 10px 24px -12px color-mix(in srgb, var(--brand-1) 60%, transparent);
+}
+
+/* ---------- 2. Base ---------- */
+:root { accent-color: var(--primary); }
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Soft brand-colored glow behind every page */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 520px at 10% -10%, color-mix(in srgb, var(--brand-1) 16%, transparent), transparent 62%),
+    radial-gradient(760px 460px at 98% 2%, color-mix(in srgb, var(--brand-3) 11%, transparent), transparent 62%);
+}
+[data-theme="light"] body::before { opacity: 0.5; }
+
+.dashboard-layout,
+.dashboard-main,
+.home-page { background: transparent; }
+
+h1, h2, h3 { letter-spacing: -0.02em; }
+
+::selection { background: color-mix(in srgb, var(--primary) 35%, transparent); color: var(--text-primary); }
+
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--text-muted) 45%, transparent) transparent; }
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted) 40%, transparent);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--text-muted) 65%, transparent); background-clip: padding-box; }
+
+:focus-visible { outline: 2px solid color-mix(in srgb, var(--primary) 75%, transparent); outline-offset: 2px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
+
+::placeholder { color: var(--input-placeholder); opacity: 1; }
+
+/* ---------- 3. Cards & surfaces ---------- */
+.saas-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+}
+[data-theme="dark"] .saas-card,
+:root:not([data-theme="light"]) .saas-card {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 46%);
+}
+
+.glass-card {
+  background: var(--card-bg-glass);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.glass-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--card-border));
+  transform: translateY(-2px);
+}
+
+/* ---------- 4. Buttons ---------- */
+.btn, .saas-btn-primary, .saas-btn-secondary, .saas-btn-danger {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
+}
+:where(.saas-btn-primary, .saas-btn-secondary, .saas-btn-danger) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.62rem 1.1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.saas-btn-primary, .saas-btn-secondary, .saas-btn-danger { border: 1px solid transparent; }
+
+.saas-btn-primary, .btn-primary {
+  background: var(--primary-gradient);
+  color: #fff;
+  box-shadow: var(--glow);
+}
+.saas-btn-primary:hover:not(:disabled), .btn-primary:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.07); }
+.saas-btn-primary:active:not(:disabled), .btn-primary:active:not(:disabled) { transform: translateY(0); filter: brightness(0.97); }
+
+.saas-btn-secondary, .btn-secondary, .btn-outline {
+  background: var(--bg-surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-main);
+}
+.saas-btn-secondary:hover:not(:disabled), .btn-secondary:hover:not(:disabled), .btn-outline:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--border-main));
+  background: var(--bg-surface-hover);
+}
+
+.saas-btn-danger, .btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+}
+.saas-btn-danger:hover:not(:disabled), .btn-danger:hover:not(:disabled) { background: var(--danger); color: #fff; }
+
+.saas-btn-primary:disabled, .saas-btn-secondary:disabled, .saas-btn-danger:disabled,
+.btn:disabled, .btn-gradient:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; transform: none; }
+
+.btn-gradient {
+  background: var(--primary-gradient);
+  box-shadow: var(--glow);
+  border-radius: 14px;
+}
+.btn-gradient:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.07); }
+
+/* ---------- 5. Forms ---------- */
+.saas-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+
+.saas-input, .form-control {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+/* Plain fields inside cards get the same look, but stay easy to override per page (zero specificity) */
+:where(.saas-card input[type="text"], .saas-card input[type="email"], .saas-card input[type="password"],
+  .saas-card input[type="number"], .saas-card input[type="url"], .saas-card input[type="search"],
+  .saas-card input[type="tel"], .saas-card input[type="date"], .saas-card select, .saas-card textarea) {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+}
+:where(.saas-input) { padding: 0.62rem 0.85rem; min-width: 0; }
+.saas-input:hover, .form-control:hover { border-color: color-mix(in srgb, var(--primary) 35%, var(--input-border)); }
+.saas-input:focus, .form-control:focus,
+:where(.saas-card input:focus, .saas-card select:focus, .saas-card textarea:focus) {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: var(--ring);
+}
+.saas-input:disabled, .form-control:disabled { opacity: 0.6; cursor: not-allowed; }
+select.saas-input { cursor: pointer; }
+
+/* Toggle switches already used by the panel */
+.saas-switch input:checked + .saas-slider, .saas-switch input:checked ~ .saas-slider { background: var(--primary-gradient); }
+
+/* ---------- 6. Tables & badges ---------- */
+.saas-table, .data-table { border-collapse: separate; border-spacing: 0; }
+.saas-table th, .data-table th {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--bg-surface-elevated) 70%, transparent);
+  border-bottom: 1px solid var(--border-main);
+}
+.saas-table td, .data-table td { border-bottom: 1px solid var(--border-subtle); }
+.saas-table tbody tr, .data-table tbody tr { transition: background-color 0.15s ease; }
+.saas-table tbody tr:hover, .data-table tbody tr:hover { background: color-mix(in srgb, var(--primary) 6%, transparent); }
+
+.badge, .status-badge { border-radius: 999px; font-weight: 700; letter-spacing: 0.01em; }
+:where(.status-badge) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.7rem;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ---------- 7. Navigation & shell ---------- */
+.dashboard-topbar {
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--topbar-border);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+.topbar-toggle-btn, .topbar-icon-btn, .topbar-search-trigger, .topbar-balance-pill { border-radius: 12px; }
+.topbar-balance-pill {
+  background: var(--accent-cyan-bg);
+  border: 1px solid color-mix(in srgb, var(--accent-cyan) 28%, transparent);
+}
+
+.saas-sidebar, .sidebar { background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border); }
+.sidebar-section-heading { color: var(--sidebar-heading); letter-spacing: 0.1em; }
+.sidebar-link { border-radius: 12px; }
+.sidebar-link:hover { background: var(--sidebar-item-hover); color: var(--sidebar-text-hover); }
+.sidebar-link.active {
+  background: var(--sidebar-item-active-bg);
+  color: var(--sidebar-item-active);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+.public-navbar {
+  background: var(--topbar-bg);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-main) 80%, transparent);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+.public-footer {
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+  border-top: 1px solid var(--border-main);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.toast {
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- 8. Public pages ---------- */
+.hero-section {
+  background: radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--brand-1) 14%, transparent) 0%, transparent 68%);
+}
+.hero-orb-1 { background: var(--brand-1); }
+.hero-orb-2 { background: var(--brand-2); }
+.hero-orb-3 { background: var(--brand-3); }
+.hero-orb { opacity: 0.3; }
+
+.hero-badge {
+  background: color-mix(in srgb, var(--brand-1) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand-1) 36%, transparent);
+  color: color-mix(in srgb, var(--brand-1) 55%, white);
+}
+[data-theme="light"] .hero-badge { color: var(--primary); }
+
+.hero-title { font-size: clamp(2.15rem, 5.2vw, 3.9rem); line-height: 1.1; letter-spacing: -0.035em; }
+.hero-subtitle { color: var(--text-secondary); }
+
+.gradient-text { background-image: var(--primary-gradient); background-color: transparent; }
+
+.hero-stat, .feature-card, .step-card, .platform-card, .testimonial-card, .faq-item {
+  border-radius: var(--radius-lg);
+  border-color: var(--card-border);
+  box-shadow: var(--card-shadow);
+}
+.feature-card, .step-card, .platform-card, .testimonial-card {
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.feature-card:hover, .step-card:hover, .platform-card:hover, .testimonial-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--card-border));
+}
+.feature-icon-wrap, .step-icon-wrap {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 14px;
+}
+.step-number { background: var(--primary-gradient); color: #fff; }
+.hero-stat-number { background-image: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+.section-title { letter-spacing: -0.03em; }
+.faq-item.open { border-color: color-mix(in srgb, var(--primary) 45%, var(--border-main)); }
+.testimonial-dot.active { background: var(--primary); }
+
+.cta-card {
+  background:
+    radial-gradient(520px 260px at 0% 0%, color-mix(in srgb, var(--brand-1) 26%, transparent), transparent 70%),
+    radial-gradient(520px 260px at 100% 100%, color-mix(in srgb, var(--brand-3) 20%, transparent), transparent 70%),
+    var(--bg-surface);
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, var(--border-main));
+  border-radius: 28px;
+  box-shadow: var(--card-shadow);
+}
+
+.filter-btn { border-radius: 10px; }
+.filter-btn:hover { background: var(--bg-surface-hover); color: var(--text-primary); }
+.filter-btn.active { background: var(--primary-light); color: var(--primary); font-weight: 700; }
+.services-search-bar input { border-radius: 14px; }
+
+/* ---------- 9. Classes pages already use but were never styled ---------- */
+@keyframes v2-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in, .animate-fade-in { animation: v2-fade-in 0.4s ease both; }
+
+:where(.cta-section) { padding: 3rem 1.5rem 5rem; }
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+}
+
+/* ---------- 10. Respect reduced-motion preferences ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

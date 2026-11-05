@@ -3,6 +3,7 @@ import {
   Sliders, Save, RefreshCw, Shield, Globe, Palette,
   Cpu, Bell, CheckCircle, AlertTriangle, Loader2
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { api } from '../../utils/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSystem } from '../../contexts/SystemContext';
@@ -224,58 +225,16 @@ export default function AdminSettingsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="saas-label">Primary Brand Accent Color</label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={settings.primary_color || '#4f46e5'}
-                  onChange={(e) => handleChange('primary_color', e.target.value)}
-                  className="w-12 h-10 rounded border border-border-main cursor-pointer bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={settings.primary_color || '#4f46e5'}
-                  onChange={(e) => handleChange('primary_color', e.target.value)}
-                  className="saas-input font-mono text-xs uppercase flex-1"
-                />
+            <div className="md:col-span-2 p-4 rounded-xl border border-border-main bg-bg-surface-elevated flex items-center justify-between gap-4">
+              <div>
+                <div className="font-bold text-xs text-text-primary">Brand colors and default mode have moved</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">
+                  Pick a color preset or your own colors, see a live preview, and choose the default light or dark mode in Theme &amp; Colors.
+                </div>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Used for primary buttons, active links, and brand gradients.
-              </p>
-            </div>
-
-            <div>
-              <label className="saas-label">Secondary / Cyan Accent Color</label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={settings.secondary_color || '#06b6d4'}
-                  onChange={(e) => handleChange('secondary_color', e.target.value)}
-                  className="w-12 h-10 rounded border border-border-main cursor-pointer bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={settings.secondary_color || '#06b6d4'}
-                  onChange={(e) => handleChange('secondary_color', e.target.value)}
-                  className="saas-input font-mono text-xs uppercase flex-1"
-                />
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Highlights, badge indicators, and graph series colors.
-              </p>
-            </div>
-
-            <div>
-              <label className="saas-label">Default Theme Mode</label>
-              <select
-                value={settings.theme_default || 'dark'}
-                onChange={(e) => handleChange('theme_default', e.target.value)}
-                className="saas-input w-full text-xs"
-              >
-                <option value="dark">Dark Theme (Default SaaS)</option>
-                <option value="light">Light Theme (Clean White)</option>
-              </select>
+              <Link to="/admin/theme" className="saas-btn-primary flex items-center gap-2 text-xs flex-shrink-0">
+                Open Theme &amp; Colors
+              </Link>
             </div>
 
             <div>
